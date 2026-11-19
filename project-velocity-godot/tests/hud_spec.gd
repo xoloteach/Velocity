@@ -134,7 +134,7 @@ func _run() -> void:
 	_check(hud.wheel_open and hud.ability_boxes.size() == 9, "Powers wheel lists all nine selectable abilities")
 	var cast: Rect2 = hud.ability_boxes["phase"]
 	_touch(6, cast.get_center(), true)
-	_check(not hud.wheel_open and game.commands.has("phase") and hud.axis.y > .70, "Ability selection preserves active navigation")
+	_check(not hud.wheel_open and game.commands.has("phase") and hud.axis.is_zero_approx(), "Ability selection releases navigation until a fresh touch")
 	_touch(5, _center("powers"), false)
 
 	var limiter: Rect2 = hud.action_boxes["limiter"]

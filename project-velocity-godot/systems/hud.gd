@@ -446,6 +446,8 @@ func _aim(delta: Vector2) -> void:
 
 
 func _set_wheel(shown: bool) -> void:
+	if shown != wheel_open:
+		flush_inputs()
 	wheel_open = shown
 	if shown:
 		_layout_wheel()
@@ -536,9 +538,9 @@ func _touch_down(index: int, at: Vector2) -> void:
 			if (ability_boxes[key] as Rect2).has_point(at):
 				_activate_power(key)
 				return
-		if _wheel_close.has_point(at):
+		if _wheel_close.has_point(at) or _action_at(at) == "powers":
 			_set_wheel(false)
-			return
+		return
 	var key := _action_at(at)
 	if not key.is_empty():
 		if key in [STICK, "limiter"] and _has_owner(key):

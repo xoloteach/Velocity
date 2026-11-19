@@ -67,6 +67,9 @@ var _was_grounded := false
 var _clip_timer := 0.0
 var _clip_override := ""
 var _camera_snap := true
+var _camera_probe := SphereShape3D.new()
+var _camera_query := PhysicsShapeQueryParameters3D.new()
+var _shadow_query := PhysicsRayQueryParameters3D.new()
 var _motion := 1.0
 var _flash := true
 var _sensitivity := 1.0
@@ -178,6 +181,12 @@ func _setup_runner() -> void:
 	camera.fov = 65.0
 	add_child(camera)
 	camera.make_current()
+	_camera_probe.radius = .28
+	_camera_query.shape = _camera_probe
+	_camera_query.collision_mask = 1 | 4
+	_camera_query.exclude = [runner.get_rid()]
+	_shadow_query.collision_mask = 1 | 4
+	_shadow_query.exclude = [runner.get_rid()]
 
 
 func _exit_tree() -> void:
@@ -239,7 +248,10 @@ func _unhandled_input(input: InputEvent) -> void:
 	if not ready_to_play:
 		return
 	if input is InputEventMouseButton and input.button_index == MOUSE_BUTTON_RIGHT:
-		_mouse_looking = input.pressed and not paused
+		_mouse_looking = input.pressed and not paused and not hud.wheel_open
+	if hud.wheel_open:
+		_mouse_looking = false
+		return
 	if input is InputEventMouseMotion and _mouse_looking and not paused:
 		look_delta(input.relative)
 	if input.is_echo():
@@ -252,7 +264,7 @@ func _unhandled_input(input: InputEvent) -> void:
 
 
 func look_delta(delta: Vector2) -> void:
-	if paused or _cinema_timer>0.0 or is_defeated:
+	if paused or (is_instance_valid(hud) and hud.wheel_open) or _cinema_timer>0.0 or is_defeated:
 		return
 	orbit.x = wrapf(orbit.x-delta.x*.0058*_sensitivity,-PI,PI)
 	orbit.y = clampf(orbit.y+delta.y*.0049*_sensitivity,-.40,.61)
@@ -608,11 +620,12 @@ func _step_runner(dt: float) -> void:
 	var requested: Vector2 = Input.get_vector("v_left","v_right","v_back","v_forward")
 	if not _test_inputs:
 		control_axis = (requested + Vector2(hud.axis)).limit_length()
-	if _cinema_timer > 0.0:
+	var wheel_open: bool = hud.wheel_open
+	if _cinema_timer > 0.0 or wheel_open:
 		control_axis = Vector2.ZERO
 	var was_boosting := boosting
-	boosting = (bool(hud.boost) or Input.is_action_pressed("v_boost")) and control_axis.length()>.13
-	sprinting = bool(hud.sprint) or Input.is_action_pressed("v_sprint")
+	boosting = not wheel_open and (bool(hud.boost) or Input.is_action_pressed("v_boost")) and control_axis.length()>.13
+	sprinting = not wheel_open and (bool(hud.sprint) or Input.is_action_pressed("v_sprint"))
 	var limiter := clampf(float(hud.limiter),.1,1.0)
 	var profile := velocity_profile(limiter)
 	var top: float = profile.top
@@ -825,12 +838,7 @@ func _update_visuals(dt: float) -> void:
 	suit.rotation.z = -.32 if wall_riding else _bank
 	var target_pitch := -clampf(speed / 120.0, 0.0, 0.13) if runner.is_on_floor() and _slide_time <= 0.0 else 0.0
 	suit.rotation.x = lerpf(suit.rotation.x, target_pitch, 1.0 - exp(-dt * 9.0))
-	if is_instance_valid(runner_shadow):
-		var height := maxf(0.0, runner.position.y)
-		var s_scale := clampf(1.0 + height * 0.16, 1.0, 1.85)
-		runner_shadow.scale = Vector3(s_scale, 1.0, s_scale)
-		runner_shadow.position.y = 0.025 - height
-		(runner_shadow.material_override as ShaderMaterial).set_shader_parameter("opacity", clampf(0.58 - height * 0.14, 0.08, 0.58))
+	_update_runner_shadow()
 	var current := "Idle"
 	if _clip_timer>0.0:
 		current = _clip_override
@@ -871,20 +879,17 @@ func _update_visuals(dt: float) -> void:
 		camera.position = camera.position.lerp(_cine_from,1.0-exp(-dt*7.0))
 		camera.look_at(_cine_to)
 	else:
-		var ray := PhysicsRayQueryParameters3D.create(center,desired,1|4)
-		ray.exclude = [runner.get_rid()]
-		var blocked := get_world_3d().direct_space_state.intersect_ray(ray)
-		if not blocked.is_empty():
-			var near: Vector3 = blocked["position"]
-			desired = near+(center-near).normalized()*.25
-		desired.y = maxf(runner.position.y+.62,desired.y)
-		camera.position = desired if _camera_snap else camera.position.lerp(desired,1.0-exp(-dt*14.0))
+		desired.y = maxf(runner.position.y + .62, desired.y)
+		var spring_position := to_global(desired) if _camera_snap else camera.global_position.lerp(to_global(desired), 1.0 - exp(-dt * 14.0))
+		# Sweep the actual damped candidate. Interpolating after collision resolution can
+		# put the camera back behind a wall or inside a corner for several frames.
+		camera.global_position = _constrain_camera(to_global(center), spring_position)
 		var aim := center+forward*(5.6+ratio*2.7)+Vector3.UP*(orbit.y*2.45-.10)
 		if not combat.locked_id.is_empty() and speed<15.0:
 			var foe: Vector3 = combat.target_position()
 			if foe.is_finite() and foe.distance_to(center)<19.0:
 				aim = aim.lerp(foe+Vector3.UP*1.34,.38)
-		camera.look_at(aim)
+		camera.look_at(to_global(aim))
 		if effects and _motion>0.0:
 			camera.rotation.z -= _bank*.21*_motion
 			camera.h_offset = sin(sim_time*42.0)*(_boost_pulse*.037+impact_charge*.065)*_shake*_motion
@@ -892,3 +897,43 @@ func _update_visuals(dt: float) -> void:
 			camera.h_offset=0.0
 	_camera_snap=false
 	camera.fov = lerpf(camera.fov,64.0+_motion*(15.0*ratio+burst*6.0),1.0-exp(-dt*8.0))
+
+
+func _constrain_camera(pivot: Vector3, candidate: Vector3) -> Vector3:
+	var motion := candidate - pivot
+	if motion.length_squared() < 0.000001:
+		return pivot
+	var space := get_world_3d().direct_space_state
+	_camera_query.transform = Transform3D(Basis.IDENTITY, pivot)
+	_camera_query.motion = motion
+	var result := space.cast_motion(_camera_query)
+	var fraction := result[0] if result.size() == 2 else 1.0
+	# cast_motion ignores colliders already overlapping the probe. A center ray is
+	# the fallback when the hero's shoulder pivot starts beside a tight wall.
+	var ray := PhysicsRayQueryParameters3D.create(pivot, candidate, _camera_query.collision_mask, _camera_query.exclude)
+	var overlap := space.intersect_ray(ray)
+	if not overlap.is_empty():
+		var contact: Vector3 = overlap["position"]
+		fraction = minf(fraction, maxf(0.0, (pivot.distance_to(contact) - _camera_probe.radius) / motion.length()))
+	return pivot + motion * fraction
+
+
+func _update_runner_shadow() -> void:
+	if not is_instance_valid(runner_shadow):
+		return
+	var feet := runner.global_position
+	_shadow_query.from = feet + Vector3.UP * .18
+	_shadow_query.to = feet - Vector3.UP * 4.0
+	var hit := get_world_3d().direct_space_state.intersect_ray(_shadow_query)
+	# A runner over a void or canal shouldn't cast a fake disc at city ground level.
+	runner_shadow.visible = not hit.is_empty()
+	if hit.is_empty():
+		return
+	var surface: Vector3 = hit["position"]
+	var normal: Vector3 = hit["normal"]
+	var height := clampf(feet.y - surface.y, 0.0, 4.0)
+	var spread := 1.0 + height * .16
+	var right := Vector3.FORWARD.cross(normal).normalized()
+	var back := right.cross(normal)
+	runner_shadow.global_transform = Transform3D(Basis(right * spread, normal, back * spread), surface + normal * .018)
+	(runner_shadow.material_override as ShaderMaterial).set_shader_parameter("opacity", .58 * (1.0 - height * .25))
