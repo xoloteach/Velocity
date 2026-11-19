@@ -422,10 +422,10 @@ def build_character_geometry(archetype: str):
         shoulder_w = 0.218
         hip_w = 0.102
         materials = [
-            ("Oxblood fabric", (0.42, 0.032, 0.045, 1.0), 0.10, 0.54, (0.0, 0.0, 0.0)),
-            ("Crimson ceramic", (0.64, 0.048, 0.058, 1.0), 0.36, 0.26, (0.0, 0.0, 0.0)),
+            ("Oxblood fabric", (0.42, 0.032, 0.045, 1.0), 0.03, 0.88, (0.0, 0.0, 0.0)),
+            ("Crimson ceramic", (0.64, 0.048, 0.058, 1.0), 0.22, 0.53, (0.0, 0.0, 0.0)),
             ("Graphite weave", (0.075, 0.068, 0.088, 1.0), 0.14, 0.68, (0.0, 0.0, 0.0)),
-            ("Amber conductor", (1.0, 0.62, 0.14, 1.0), 0.40, 0.22, (0.98, 0.54, 0.10)),
+            ("Amber conductor", (1.0, 0.62, 0.14, 1.0), 0.40, 0.22, (0.24, 0.11, 0.02)),
             ("Rose alloy", (0.82, 0.58, 0.20, 1.0), 0.82, 0.22, (0.0, 0.0, 0.0)),
             ("Flexible shell", (0.12, 0.030, 0.042, 1.0), 0.18, 0.58, (0.0, 0.0, 0.0)),
             ("Smoked visor", (0.03, 0.07, 0.12, 1.0), 0.85, 0.12, (0.14, 0.42, 0.60)),
@@ -738,7 +738,8 @@ def build_character_geometry(archetype: str):
             ], (0.0, 0.008, 0.0), rigid_skin(arm_j))
         else:
             # Heroic sculpted crimson shoulder armor + gold deltoid bolt
-            add_ellipsoid(buckets[M_ARMOR], (sx_sh + sign * 0.022, 1.44 * sy, 0.004), (0.076, 0.064, 0.076), rigid_skin(arm_j))
+            add_ellipsoid(buckets[M_ARMOR], (sx_sh + sign * 0.022, 1.44 * sy, 0.004), (0.072, 0.047, 0.073), rigid_skin(arm_j))
+            add_ellipsoid(buckets[M_WEAVE], (sx_sh + sign * 0.024, 1.408 * sy, 0.008), (0.066, 0.036, 0.068), rigid_skin(arm_j))
             add_tube(buckets[M_GOLD], [
                 (sx_sh + sign * 0.056, 1.46 * sy, 0.048),
                 (sx_sh + sign * 0.086, 1.425 * sy, 0.014),
@@ -836,7 +837,7 @@ def build_character_geometry(archetype: str):
         ], 0.0065, rigid_skin(shin_j), seg=6)
 
         # Grounded sculpted speedster boot (sole sits flush at Y = 0.000!)
-        boot_mat = M_ALLOY if archetype in ("hero", "afterlight") else M_ARMOR
+        boot_mat = M_ALLOY if archetype == "afterlight" else M_WEAVE if archetype == "hero" else M_ARMOR
         boot_rings = [
             (0.000, lx_an, -0.035, 0.060 * w_mult, 0.128),
             (0.030, lx_an, -0.038, 0.064 * w_mult, 0.132),
