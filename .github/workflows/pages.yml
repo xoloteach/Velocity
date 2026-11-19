@@ -29,9 +29,10 @@ jobs:
       - name: Extract and verify the Godot web export
         run: |
           unzip -q project-velocity-final-web.zip -d web-export
-          test -s web-export/project-velocity-web/index.html
-          test -s web-export/project-velocity-web/index.wasm
-          test -s web-export/project-velocity-web/index.pck
+          cd web-export/project-velocity-web
+          for file in index.html index.js index.wasm index.pck; do
+            test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
+          done
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web-export/project-velocity-web
