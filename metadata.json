@@ -1,0 +1,6 @@
+{
+  "name": "Project Velocity",
+  "description": "Godot 4 third-person open-world speedster action RPG set in the city of Calder, exported for WebGL 2.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

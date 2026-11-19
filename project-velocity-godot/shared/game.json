@@ -1,0 +1,41 @@
+{
+  "version": 2,
+  "seed": 68137,
+  "chunkSize": 134,
+  "chunkOrigin": [-67, -335],
+  "chunkLimits": [-3, 3, -2, 4],
+  "districts": [
+    {"name":"Foundry Row","skin":1,"height":0.72,"park":false},
+    {"name":"Meridian Heights","skin":0,"height":1.38,"park":false},
+    {"name":"Orchard Commons","skin":2,"height":0.65,"park":true},
+    {"name":"East Market","skin":1,"height":0.86,"park":false}
+  ],
+  "canal": {"cell":[-1,1],"west":-182,"east":-110,"north":-196,"south":-75,"bridges":[-177,-119]},
+  "rift": {"entrance":[0,-289],"realm":[0,1350],"exit":[0,1311]},
+  "waterSpeed":24,
+  "abilities": [
+    {"id":"lightning","name":"Lightning","key":"1","cooldown":1.6,"duration":0,"color":"#ffc06b"},
+    {"id":"phase","name":"Phase","key":"2","cooldown":5,"duration":1.35,"color":"#88daff"},
+    {"id":"rewind","name":"Rewind","key":"3","cooldown":8,"duration":3,"color":"#b2a3fc"},
+    {"id":"tornado","name":"Tornado","key":"4","cooldown":7,"duration":2.6,"color":"#a8eedb"},
+    {"id":"mirage","name":"Mirage","key":"5","cooldown":6,"duration":3.2,"color":"#f4a584"},
+    {"id":"slow","name":"Slow time","key":"6","cooldown":8,"duration":3.8,"color":"#a9bdff"},
+    {"id":"portal","name":"Rift","key":"7","cooldown":2,"duration":0,"color":"#cda9ff"}
+  ],
+  "rarities": [
+    {"name":"Common","weight":5000,"color":"#b9c0c8","items":["Cinder trail","Sand trail"]},
+    {"name":"Rare","weight":2700,"color":"#70beff","items":["Cobalt trail","Glacier trail"]},
+    {"name":"Epic","weight":1400,"color":"#bb99ff","items":["Violet trail","Prism trail"]},
+    {"name":"Legendary","weight":650,"color":"#ffb465","items":["Solar trail","Amber trail"]},
+    {"name":"Mythic","weight":200,"color":"#ff96a6","items":["Bloom trail","Nova trail"]},
+    {"name":"Divine","weight":50,"color":"#a9ffdd","items":["Aurora trail","Starfall trail"]}
+  ],
+  "pullCost":25,
+  "distancePerCredit":18,
+  "speedMilestones":[25,50,90,120,160,210,270,360,465,560],
+  "missions":[
+    {"id":"relay","name":"Broken Circuit","caption":"Stop the speedster stealing the Calder relay.","site":[0,-119],"reward":85},
+    {"id":"rescue","name":"Last Crossing","caption":"Find the injured courier by the canal and escort them to safety.","site":[-97,-119],"reward":50},
+    {"id":"pursuit","name":"Market Pursuit","caption":"Run down the stolen interceptor in East Market.","site":[118,-119],"reward":65}
+  ]
+}

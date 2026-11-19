@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "powers": {
+    "lightning": {"name":"Lightning", "cost":12, "windup":0.13, "active":0, "recovery":0.28, "cooldown":1.25, "range":34, "aim":"forward_or_lock", "color":"#ffbc6a", "pose":"Jab", "fx":"arc", "audio":"lightning"},
+    "shockwave": {"name":"Shockwave", "cost":20, "windup":0.18, "active":0, "recovery":0.35, "cooldown":4.2, "range":7.6, "aim":"radial", "color":"#ffc47a", "pose":"Heavy", "fx":"ring", "audio":"shockwave"},
+    "phase": {"name":"Phase", "cost":16, "windup":0, "active":1.65, "recovery":0.16, "cooldown":4.2, "range":0, "aim":"self", "color":"#bceaff", "pose":"Counter", "fx":"phase", "audio":"phase"},
+    "tornado": {"name":"Tornado", "cost":31, "windup":0.21, "active":2.6, "recovery":0.28, "cooldown":7.0, "range":9.2, "aim":"fixed_area", "color":"#a8eedb", "pose":"Slide", "fx":"vortex", "audio":"tornado"},
+    "redirect": {"name":"Redirect", "cost":13, "windup":0.08, "active":0, "recovery":0.21, "cooldown":1.75, "range":9.2, "aim":"front_projectile", "color":"#ffe398", "pose":"Counter", "fx":"deflect", "audio":"redirect"},
+    "mirage": {"name":"Mirage", "cost":18, "windup":0.08, "active":3.5, "recovery":0.16, "cooldown":6, "range":18, "aim":"history", "color":"#ffaf90", "pose":"Dodge", "fx":"ghost", "audio":"mirage"},
+    "slow": {"name":"Slow time", "cost":27, "windup":0.08, "active":4.2, "recovery":0.14, "cooldown":8, "range":0, "aim":"local_clock", "color":"#a9bdff", "pose":"Heavy", "fx":"slow", "audio":"slow"},
+    "portal": {"name":"Rift", "cost":0, "windup":0.20, "active":0, "recovery":0.27, "cooldown":1.7, "range":6.4, "aim":"anchor", "color":"#cda9ff", "pose":"Counter", "fx":"rift", "audio":"portal"}
+  }
+}
