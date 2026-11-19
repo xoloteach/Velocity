@@ -9,6 +9,7 @@ const SUPPORT = {
 	"progress": preload("res://systems/progress.gd"), "rewind": preload("res://systems/rewind.gd"),
 	"campaign": preload("res://systems/campaign.gd"), "presentation": preload("res://systems/presentation.gd")
 }
+const Circuit = preload("res://systems/midnight.gd")
 const Hud = preload("res://systems/hud.gd")
 var runner: CharacterBody3D
 var suit: Node3D
@@ -42,6 +43,7 @@ var progress
 var history
 var campaign
 var presentation
+var midnight: Node3D
 var flags: Dictionary = {}
 var control_axis := Vector2.ZERO
 var boosting := false
@@ -118,6 +120,9 @@ func _ready() -> void:
 	history.setup(self)
 	presentation.setup(self)
 	hud.setup(self)
+	midnight = Circuit.new()
+	add_child(midnight)
+	midnight.setup(self)
 	campaign.setup(self)
 	_benchmark = "--benchmark" in OS.get_cmdline_user_args()
 	ready_to_play = true
@@ -125,6 +130,8 @@ func _ready() -> void:
 		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	print("VELOCITY_GAME_READY mission=%d renderer=compatibility" % campaign.mission_index)
 	_notify_test_profile()
+	if OS.has_feature("web") and bool(JavaScriptBridge.eval("new URLSearchParams(location.search).get('mode') === 'midnight'")):
+		command("midnight")
 
 
 func _module(filename: String):
@@ -378,7 +385,7 @@ func command(action: String) -> void:
 		"restart":
 			paused = false
 			campaign.retry()
-		"race","patrol","rift_trial":
+		"race","patrol","rift_trial","midnight":
 			paused = false
 			campaign.choose_activity(action)
 		"next":
@@ -413,6 +420,10 @@ func command(action: String) -> void:
 
 
 func _take_action(action: String) -> void:
+	if midnight.running and action not in ["jump", "slide"]:
+		if action == "rewind":
+			announce("Rewind is off in timed runs.", 1.5)
+		return
 	if action == "rewind":
 		var seconds := 4.0 if campaign.mission_index == 4 else 3.0
 		if history.request(seconds):
@@ -466,6 +477,12 @@ func reset_runner(at: Vector3, destination := "city") -> void:
 	hero_heading = 0.0
 	_slide_time = 0.0
 	_clip_timer = 0.0
+	_cinema_timer = 0.0
+	_jump_buffer = 0.0
+	_coyote = 0.0
+	_boost_pulse = 0.0
+	boosting = false
+	sprinting = false
 	_commands.clear()
 	powers.reset()
 	teleport(at,destination)
@@ -562,6 +579,9 @@ func _physics_process(dt: float) -> void:
 		return
 	if paused:
 		return
+	if midnight.hold(dt):
+		_commands.clear()
+		return
 	while not _commands.is_empty():
 		var action: String = _commands.pop_front()
 		_take_action(action)
@@ -581,6 +601,10 @@ func _physics_process(dt: float) -> void:
 	_update_timers(dt)
 	_step_runner(dt)
 	world.step(dt,runner.position)
+	if midnight.running:
+		midnight.step(dt, runner.position)
+		progress.tick(dt)
+		return
 	population.step(dt*powers.slow_factor())
 	combat.step(dt)
 	powers.step(dt)
@@ -634,9 +658,11 @@ func _step_runner(dt: float) -> void:
 	var forward := Vector3(-sin(orbit.x),0.0,-cos(orbit.x))
 	var side := Vector3(cos(orbit.x),0.0,-sin(orbit.x))
 	var input_direction := forward*control_axis.y+side*control_axis.x
-	var path := _update_transit(dt,input_direction,grounded,limiter,top)
+	var path := 0.0 if midnight.running else _update_transit(dt,input_direction,grounded,limiter,top)
 	var base: float = top if boosting else minf(47.0,top*.43) if sprinting else 5.9
 	base = (base+path)*profile.limiter
+	if midnight.pad_time > 0.0 and midnight.running:
+		base = maxf(base, 63.0 * profile.limiter)
 	top += path
 	var desired: Vector3 = input_direction*base*combat.movement_factor()
 	var velocity_flat := Vector3(runner.velocity.x,0.0,runner.velocity.z)
@@ -648,6 +674,13 @@ func _step_runner(dt: float) -> void:
 		acceleration = 43.0 + turn_force*.42
 	if _transit_brake>0.0:
 		acceleration = maxf(acceleration,164.0)
+	if midnight.running and grounded:
+		var alignment := velocity_flat.normalized().dot(input_direction.normalized())
+		if speed > 10.0 and alignment < .70:
+			acceleration = maxf(acceleration, 300.0)
+			var axis := input_direction.normalized()
+			var along := axis * maxf(0.0, velocity_flat.dot(axis))
+			velocity_flat = velocity_flat.lerp(along, 1.0 - exp(-dt * 42.0))
 	if _slide_time>0.0:
 		acceleration = 12.0
 		desired *= .6
@@ -696,7 +729,7 @@ func _step_runner(dt: float) -> void:
 	if grounded and not on_water and not powers.phased():
 		safe_position=runner.position
 	var step_distance := Vector2(at.x-runner.position.x,at.z-runner.position.z).length()
-	if step_distance <= maxf(3.8,top*dt*1.75):
+	if not midnight.running and step_distance <= maxf(3.8,top*dt*1.75):
 		progress.earn_distance(step_distance,speed,runner.position,step_distance>.03,realm,dt)
 	if desired.length()>1.0:
 		var dest := atan2(-velocity_flat.x,-velocity_flat.z)
@@ -720,12 +753,21 @@ func _step_runner(dt: float) -> void:
 		announce("Back on safe ground.")
 
 
+func circuit_burst(dir: Vector3) -> void:
+	var launch := maxf(speed, 59.0 * float(velocity_profile(hud.limiter).limiter))
+	runner.velocity.x = dir.x * launch
+	runner.velocity.z = dir.z * launch
+	speed = launch
+	_boost_pulse = 1.0
+	pulse("boost", runner.position)
+
+
 func get_last_slide_count_safe() -> bool:
 	return runner.get_slide_collision_count() > 1
 
 
 func velocity_profile(limiter: float) -> Dictionary:
-	var upgrades: Dictionary = progress.movement()
+	var upgrades: Dictionary = {} if is_instance_valid(midnight) and midnight.running else progress.movement()
 	return {
 		"top": clampf(52.0*float(upgrades.get("speed",1.0)),28.0,118.0),
 		"acceleration": clampf(32.0*float(upgrades.get("accel",1.0)),8.0,105.0),

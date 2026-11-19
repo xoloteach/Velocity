@@ -43,6 +43,7 @@ var mission_flags: Dictionary = {}
 var checkpoint: Dictionary = {"position": START, "realm": "city"}
 var finished: bool = false
 var best_time: float = 0.0
+var midnight_splits: Array[float] = []
 var travel_total: float = 0.0
 var prestige_level: int = 0
 var persistent: bool = true
@@ -221,6 +222,28 @@ func record_trial(seconds: float) -> bool:
 	var previous := _serialize(_revision)
 	best_time = seconds
 	return _finish_or_restore(previous)
+
+
+func record_midnight(splits: Array) -> bool:
+	var valid := _valid_midnight_splits(splits)
+	if valid.is_empty() or (not midnight_splits.is_empty() and valid.back() >= midnight_splits.back()):
+		return false
+	var previous := _serialize(_revision)
+	midnight_splits = valid
+	return _finish_or_restore(previous)
+
+
+func _valid_midnight_splits(value: Variant) -> Array[float]:
+	var result: Array[float] = []
+	if not value is Array or value.size() != 12:
+		return result
+	var last := 0.0
+	for stamp in value:
+		if not (stamp is int or stamp is float) or not is_finite(float(stamp)) or stamp <= last:
+			return []
+		last = float(stamp)
+		result.append(last)
+	return result
 
 
 func upgrade_cost(stat: String) -> int:
@@ -491,7 +514,7 @@ func _serialize(revision: int) -> Dictionary:
 		"stats": stats.duplicate(true), "inventory": inventory.duplicate(true), "equipped": equipped_trail,
 		"settings": settings.duplicate(true), "seed": seed, "mission_index": mission_index,
 		"mission_stage": mission_stage, "mission_flags": mission_flags.duplicate(true),
-		"checkpoint": checkpoint.duplicate(true), "finished": finished, "best_time": best_time,
+		"checkpoint": checkpoint.duplicate(true), "finished": finished, "best_time": best_time, "midnight_splits": midnight_splits.duplicate(),
 		"travel": travel_total, "prestige": prestige_level, "pull_index": _pull_index, "salt": _salt,
 		"awards": _awards.duplicate(), "visited": _cells.duplicate(), "recent": _recent_cells.duplicate(),
 		"journal": _events.duplicate(true)
@@ -534,6 +557,7 @@ func _apply(data: Dictionary) -> void:
 	}
 	finished = data.get("finished", false) == true or mission_index >= 8
 	best_time = _nonnegative(data.get("best_time", 0.0))
+	midnight_splits = _valid_midnight_splits(data.get("midnight_splits", []))
 	travel_total = _nonnegative(data.get("travel", data.get("distance", 0.0)))
 	prestige_level = _number(data.get("prestige", 0), 0, 1_000_000)
 	_pull_index = _number(data.get("pull_index", data.get("pulls", 0)), 0, MAX_BALANCE)

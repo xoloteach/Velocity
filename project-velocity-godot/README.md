@@ -12,6 +12,12 @@ python3 -m http.server 8080 --directory project-velocity-web
 
 Open `http://localhost:8080/` in any WebGL 2 browser (no Cross-Origin-Opener-Policy / SharedArrayBuffer headers required). Click or tap the canvas to enable Web Audio, and open **Ops → Settings** for graphics presets (**Low / Medium / High / Ultra**), reduced motion/flash accessibility, and audio levels.
 
+## Midnight Circuit
+
+Open **Ops → Midnight Circuit** or launch the web game with `?mode=midnight`. Race twelve gates across Calder and both canal bridges. Drive across lime chevrons for a speed burst; release boost before the pink turn gates. The standard suit keeps attempts comparable, and rewind is disabled. Your best run and checkpoint splits save locally without replacing your Calder Circuit record or story checkpoint.
+
+**Gold:** 14 seconds · **Silver:** 20 seconds · **Bronze:** 29 seconds. Press **R** to restart, or select **Race Again** on the results screen.
+
 ## Controls
 
 | Action | Touch (Landscape) | Keyboard & Mouse | Gamepad |

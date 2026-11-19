@@ -201,9 +201,10 @@ func _open(index: int, step_number := 0, restore_saved := false, replaying := fa
 		game.progress.save_checkpoint(mission_index,str(step_index),at,destination)
 
 
-func _reset_encounter() -> void:
+func _reset_encounter(ambient := true) -> void:
+	game.midnight.end()
 	game.combat.clear_encounter()
-	game.population.reset_scene()
+	game.population.reset_scene(false, ambient)
 	_unregister_switch()
 	_start_state = {}
 	state = {}
@@ -236,10 +237,20 @@ func _in_story() -> bool:
 
 
 func choose_activity(which: String) -> void:
-	if which not in ["race","patrol","rift_trial"]:
+	if which not in ["race","patrol","rift_trial","midnight"]:
 		return
-	_reset_encounter()
+	_reset_encounter(which != "midnight")
 	activity=which
+	if which == "midnight":
+		game.population.set_patrol(false)
+		game.reset_runner(game.midnight.START)
+		game.mission_title = "Midnight Circuit"
+		game.say("", 0.0)
+		game.announce("", 0.0)
+		_hidden = true
+		_marker.hide()
+		game.midnight.begin()
+		return
 	race_index=0
 	race_time=0.0
 	game.reset_runner(Vector3(0,0,1360) if which=="rift_trial" else HOME,"rift" if which=="rift_trial" else "city")

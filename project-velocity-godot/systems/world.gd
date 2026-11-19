@@ -38,6 +38,7 @@ var train_time := 0.0
 var realm := "city"
 var elapsed := 0.0
 var time_of_day := 18.35
+var circuit_lighting := false
 var quality := 2
 var motion_scale := 1.0
 var seed := 68137
@@ -89,7 +90,7 @@ func step(delta: float, player_pos: Vector3) -> void:
 		var active := cell_at(player_pos)
 		if active != center_cell:
 			prepare_destination(player_pos)
-		elapsed_lighting += delta
+		elapsed_lighting += 0.0 if circuit_lighting else delta
 		if elapsed_lighting >= 3.0:
 			set_hour(time_of_day + elapsed_lighting / 48.0)
 			elapsed_lighting = 0.0
@@ -138,6 +139,10 @@ func set_realm(next_realm: String) -> void:
 		city.visible = realm == "city"
 		rift.visible = realm == "rift"
 		_set_lighting()
+
+func set_circuit_lighting(active: bool) -> void:
+	circuit_lighting = active
+	_set_lighting()
 
 func set_hour(hour: float) -> void:
 	time_of_day = fposmod(hour, 24.0)
@@ -588,6 +593,23 @@ func _set_lighting() -> void:
 		atmosphere.fog_light_color = Color("675990")
 		atmosphere.fog_depth_begin = 44.0
 		atmosphere.fog_depth_end = 220.0
+		return
+	if circuit_lighting:
+		sky_material.set_shader_parameter("zenith", Color("1c2454"))
+		sky_material.set_shader_parameter("haze", Color("865696"))
+		sky_material.set_shader_parameter("soft_cloud", Color("b77fbc"))
+		sky_material.set_shader_parameter("celestial", .72)
+		sky_material.set_shader_parameter("daylight", 0.0)
+		sun.light_color = Color("abbaff")
+		sun.light_energy = .49
+		atmosphere.ambient_light_color = Color("bcc3f5")
+		atmosphere.ambient_light_energy = .92
+		atmosphere.fog_light_color = Color("6d589d")
+		atmosphere.fog_depth_begin = 58.0
+		atmosphere.fog_depth_end = 237.0
+		for shader in facade:
+			shader.set_shader_parameter("lamps", .97)
+		materials["asphalt"].set_shader_parameter("wetness", 1.0)
 		return
 	var daylight := smoothstep(-0.20, 0.38, cos((time_of_day - 12.0) * TAU / 24.0))
 	sky_material.set_shader_parameter("zenith", Color("182e56").lerp(Color("4b7fb3"), daylight))

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - project-velocity-final-web.zip
+      - project-velocity-godot/**
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -26,16 +26,34 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - name: Extract and verify the Godot web export
+      - name: Build and verify the Godot web export
+        shell: bash
         run: |
-          unzip -q project-velocity-final-web.zip -d web-export
-          cd web-export/project-velocity-web
+          set -euo pipefail
+          base=https://github.com/godotengine/godot-builds/releases/download/4.6.3-stable
+          cd "$RUNNER_TEMP"
+          curl -fsSL --retry 4 --retry-all-errors "$base/Godot_v4.6.3-stable_linux.x86_64.zip" -o engine.zip
+          curl -fsSL --retry 4 --retry-all-errors "$base/Godot_v4.6.3-stable_export_templates.tpz" -o templates.tpz
+          printf '%s\n' \
+            'd0bc2113065e481c9c2c2b2c37daa4e8be3fe9e27f0ab9ab0b6096e9a37907f3  engine.zip' \
+            '3fbe2c0e2dec9d537ab9ec97bcf8da91dcf23357fc51f67092dd068d839290a8  templates.tpz' | sha256sum -c
+          unzip -q engine.zip
+          engine="$RUNNER_TEMP/Godot_v4.6.3-stable_linux.x86_64"
+          export XDG_DATA_HOME="$RUNNER_TEMP/velocity-godot-data"
+          templates="$XDG_DATA_HOME/godot/export_templates/4.6.3.stable"
+          mkdir -p "$templates" "$GITHUB_WORKSPACE/web-export"
+          unzip -p templates.tpz templates/web_nothreads_release.zip > "$templates/web_nothreads_release.zip"
+          project="$GITHUB_WORKSPACE/project-velocity-godot"
+          # Discard checked-in editor caches: file paths and imports are machine specific.
+          rm -rf -- "$project/.godot"
+          "$engine" --headless --path "$project" --editor --import
+          "$engine" --headless --path "$project" --fixed-fps 60 --script res://tests/midnight_test.gd
+          "$engine" --headless --path "$project" --export-release Web "$GITHUB_WORKSPACE/web-export/index.html"
           for file in index.html index.js index.wasm index.pck; do
-            test -s "$file" || { echo "Missing or empty: $file"; exit 1; }
+            test -s "$GITHUB_WORKSPACE/web-export/$file"
           done
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web-export/project-velocity-web
-      - name: Deploy to GitHub Pages
+          path: web-export
+      - uses: actions/deploy-pages@v4
         id: deployment
-        uses: actions/deploy-pages@v4

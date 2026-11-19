@@ -47,7 +47,7 @@ func setup(coordinator) -> void:
 func set_reduced_flash(enabled: bool) -> void:
 	_reduced_flash = enabled
 
-func reset_scene(keep_named: bool = false) -> void:
+func reset_scene(keep_named: bool = false, ambient: bool = true) -> void:
 	if not crime.is_empty():
 		_clear_crime()
 	for id in _actors.keys():
@@ -57,7 +57,8 @@ func reset_scene(keep_named: bool = false) -> void:
 	crime.clear()
 	_crime_cooldown = 18.0
 	_hero_collision = 0.0
-	_reset_ambient()
+	if ambient:
+		_reset_ambient()
 
 func _reset_ambient() -> void:
 	# Independent routes give lawful directional traffic through both intersections.

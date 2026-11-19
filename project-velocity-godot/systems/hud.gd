@@ -1,6 +1,7 @@
 extends Control
 ## Landscape HUD and independent touch ownership. Gameplay commands are sent to the coordinator.
 
+const Circuit = preload("res://systems/midnight.gd")
 const AMBER := Color("#ffc079")
 const MILK := Color("#f5eee5")
 const CYAN := Color("#a2ecf3")
@@ -111,6 +112,7 @@ var _rewind_remaining := 0.0
 var _slow_time := false
 var _phased := false
 var _audio_unlocked := true
+var _circuit_action := Rect2()
 
 
 func setup(owner_game) -> void:
@@ -389,6 +391,17 @@ func _movement_context() -> String:
 
 func _update_active_rects() -> void:
 	active_rects.clear()
+	if not editor and bool(_prop(_prop(game, "midnight"), "running", false)):
+		active_rects[STICK] = action_boxes[STICK]
+		active_rects["limiter"] = action_boxes["limiter"]
+		var edge := clampf(size.x * .024, 16.0, 36.0)
+		var w := 92.0
+		for i in range(4):
+			var key: String = ["boost", "sprint", "jump", "slide"][i]
+			var at := Vector2(size.x - edge - w - (w + 13.0) * i, _speed_card.position.y - w - 13.0)
+			var area := Rect2(at, Vector2(w,w))
+			active_rects[key] = action_boxes[key] if custom_layout.has(key) else area
+		return
 	var fight := bool(_prop(game,"in_combat",not _boss.is_empty()))
 	var near_action := bool(_prop(game,"interaction_available",_loc.distance_to(_target) < 14.0))
 	var population: Variant = _prop(game, "population")
@@ -446,6 +459,8 @@ func _aim(delta: Vector2) -> void:
 
 
 func _set_wheel(shown: bool) -> void:
+	if shown and bool(_prop(_prop(game, "midnight"), "running", false)):
+		return
 	if shown != wheel_open:
 		flush_inputs()
 	wheel_open = shown
@@ -526,6 +541,9 @@ func _touch_down(index: int, at: Vector2) -> void:
 	if _cinematic:
 		if _toolbar_pause.has_point(at):
 			_issue("skip")
+		return
+	if _circuit_action.has_point(at):
+		_issue("restart" if bool(_prop(_prop(game, "midnight"), "running", false)) else "midnight")
 		return
 	if _toolbar_pause.has_point(at):
 		show_menu("settings")
@@ -622,7 +640,7 @@ func _input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_LEFT and menu_current.is_empty():
 			if event.pressed:
 				var at: Vector2 = event.position
-				if editor or wheel_open or _toolbar_pause.has_point(at) or _toolbar_mission.has_point(at) or (action_boxes.get("limiter", _slider_box) as Rect2).has_point(at):
+				if editor or wheel_open or _toolbar_pause.has_point(at) or _toolbar_mission.has_point(at) or _circuit_action.has_point(at) or (action_boxes.get("limiter", _slider_box) as Rect2).has_point(at):
 					_touch_down(-7, at)
 					get_viewport().set_input_as_handled()
 				else:
@@ -850,6 +868,7 @@ func _draw_screen_fx() -> void:
 
 
 func _draw() -> void:
+	_circuit_action = Rect2()
 	if _font == null or size.x < 20.0:
 		return
 	var edge := clampf(size.x*.024, 16, 36)
@@ -870,6 +889,10 @@ func _draw() -> void:
 		_draw_dialogue()
 		return
 	_draw_screen_fx()
+	var circuit: Variant = _prop(game, "midnight")
+	if bool(_prop(circuit, "running", false)):
+		_draw_circuit(edge, circuit)
+		return
 	_draw_bolt(Vector2(edge, edge + 2), .70)
 	_stroke_text(Vector2(edge+31, edge+23), "PROJECT VELOCITY", 23, MILK, true)
 	_stroke_text(Vector2(edge+32, edge+42), _district, 11, AMBER, true)
@@ -913,7 +936,89 @@ func _draw() -> void:
 		_center_text(hint_rect.get_center() + Vector2(0, 4), "CLICK OR TAP FOR AUDIO", 10, CYAN, true)
 	if wheel_open:
 		_draw_ability_wheel()
+	elif _last_device != "touch" and size.x >= 750.0:
+		_circuit_action = Rect2(edge, edge + 170.0, 198.0, 44.0)
+		_tile(_circuit_action, Circuit.PINK, Color("#211534ed"))
+		_center_text(_circuit_action.get_center() + Vector2(0,5), "PLAY MIDNIGHT CIRCUIT", 13, Circuit.WHITE, true)
 	_draw_dialogue()
+
+
+func _draw_circuit(edge: float, circuit: Variant) -> void:
+	var wide := minf(432.0, size.x - edge * 2.0 - (222.0 if size.x > 610.0 else 0.0))
+	var card := Rect2(Vector2((size.x - wide) * .5, edge if size.x > 610.0 else edge + 54.0), Vector2(wide, 90.0))
+	_tile(card, Circuit.PINK, Color("#151632f3"))
+	_stroke_text(card.position + Vector2(14,21), "MIDNIGHT CIRCUIT", 13, Circuit.PINK, true)
+	_stroke_text(card.position + Vector2(14,54), "00:00.00" if circuit.elapsed <= 0.0 else Circuit.format_time(circuit.elapsed), 30, Circuit.WHITE, true)
+	var pixel_scale := float(get_window().size.x) / maxf(size.x, 1.0)
+	if get_window().size.y > get_window().size.x and pixel_scale < .43 and _last_device == "touch":
+		var tip := Rect2(size.x * .5-355.0,size.y*.55,710.0,140.0)
+		_tile(tip, Circuit.ICE, Color("#151632f5"))
+		_center_text(tip.get_center()+Vector2(0,15), "ROTATE FOR LARGER CONTROLS", 43, Circuit.WHITE, true)
+	var finish: String = circuit.finish_grade
+	var gate_number: int = mini(circuit.gate + 1, Circuit.GATES.size())
+	var gate_label := ("GATE %02d / %02d" % [gate_number, Circuit.GATES.size()]) if finish.is_empty() else finish
+	var small := size.x < 520.0
+	var right := card.end.x - (94.0 if small else 120.0)
+	_stroke_text(Vector2(right,card.position.y + 21), gate_label, 13, Circuit.LIME, true)
+	var pb: Array = game.progress.midnight_splits
+	var compare := "BEST  " + ("—" if pb.is_empty() else Circuit.format_time(pb.back()))
+	var compare_tint := TEXT
+	if circuit.gate > 0 and circuit.previous_splits.size() == Circuit.GATES.size() and finish.is_empty():
+		var gap: float = circuit.delta
+		compare = "SPLIT %+0.2f S" % gap
+		compare_tint = Circuit.LIME if gap <= 0.0 else Circuit.PINK
+	_stroke_text(Vector2(right,card.position.y + 45), compare, 12, compare_tint, true)
+	var slot := (wide - 28.0) / float(Circuit.GATES.size())
+	for i in range(Circuit.GATES.size()):
+		var tint := Circuit.ICE if i < circuit.gate else Circuit.LIME if i == circuit.gate else Color("#555576")
+		draw_rect(Rect2(card.position.x+14.0+i*slot, card.end.y-18.0, slot-4.0, 4.0), tint)
+	_draw_top_controls()
+	if finish.is_empty():
+		_draw_speed()
+		if _last_device == "touch":
+			_draw_touch()
+		var hint := ""
+		if circuit.count > 0.0:
+			hint = str(ceili(circuit.count))
+		elif circuit.go:
+			hint = "GO"
+		if not hint.is_empty():
+			var start := Rect2(size.x*.5-57, size.y*.34-38, 114, 76)
+			_tile(start, Circuit.LIME, Color("#141632ef"))
+			_center_text(start.get_center()+Vector2(0,14), hint, 42, Circuit.LIME, true)
+			if circuit.count > 0.0 and size.y > 410.0:
+				_center_text(start.get_center()+Vector2(0,58), "12 GATES  ·  GOLD: %d S" % Circuit.GOLD, 14, Circuit.WHITE, true)
+		elif circuit.pad_cue > 0.0:
+			var boost_banner := Rect2(size.x*.5-82,card.end.y+10,164,30)
+			_tile(boost_banner, Circuit.LIME, Color("#151632ec"))
+			_center_text(boost_banner.get_center()+Vector2(0,5), "BOOST STRIP", 13, Circuit.LIME, true)
+		if size.x >= 920.0:
+			_draw_circuit_map(Vector2(size.x-edge-154,edge+59), circuit.gate)
+		if _last_device != "touch" and size.x >= 750.0:
+			var tip := "WASD  MOVE    ·    SHIFT  SPRINT    ·    F  BOOST    ·    R  RESTART"
+			if _last_device == "gamepad":
+				tip = "LEFT STICK  MOVE    ·    LB  SPRINT    ·    RT  BOOST    ·    START  OPS"
+			_stroke_text(Vector2(edge,size.y-edge-5),tip,13,TEXT,true)
+		return
+	var result := Rect2(Vector2((size.x-minf(size.x-2*edge,374.0))*.5, maxf(card.end.y+10,size.y*.32)), Vector2(minf(size.x-2*edge,374.0),166))
+	_tile(result, Circuit.LIME, Color("#141632f9"))
+	_center_text(Vector2(result.get_center().x,result.position.y+27), "NEW PERSONAL BEST" if circuit.new_best else "CIRCUIT COMPLETE", 14, Circuit.ICE, true)
+	_center_text(Vector2(result.get_center().x,result.position.y+62), Circuit.format_time(circuit.elapsed), 33, MILK, true)
+	_center_text(Vector2(result.get_center().x,result.position.y+88), "%s   /   12 GATES" % finish, 14, Circuit.LIME, true)
+	_circuit_action = Rect2(result.get_center().x-101,result.position.y+104,202,46)
+	_tile(_circuit_action, Circuit.PINK, Color("#432651"))
+	_center_text(_circuit_action.get_center()+Vector2(0,5), "RACE AGAIN", 14, MILK, true)
+
+
+func _draw_circuit_map(at: Vector2, current: int) -> void:
+	_tile(Rect2(at,Vector2(154,153)), Circuit.ICE, Color("#151632ee"))
+	_stroke_text(at+Vector2(12,20), "SOUTH CANAL", 12, Circuit.ICE, true)
+	var path := PackedVector2Array([at + Vector2(134,35)])
+	for point: Vector3 in Circuit.GATES:
+		path.append(at + Vector2(134 + point.x*.53, 35 - (point.z-8)*.52))
+	draw_polyline(path, Color("#7983ae"), 2.0, true)
+	for i in range(path.size()-1):
+		draw_circle(path[i+1], 4.4 if i == current else 2.4, Circuit.LIME if i == current else Circuit.ICE if i < current else TEXT, true, -1.0, true)
 
 
 func _draw_radar(midpoint: Vector2, radius: float) -> void:
@@ -947,7 +1052,7 @@ func _draw_speed() -> void:
 		if not tier.is_empty():
 			movement_tier = clampi(int(tier), 0, TIER_NAMES.size()-1)
 		tier = TIER_NAMES[movement_tier]
-	_stroke_text(base+Vector2(98,18),"RANK · " + tier.to_upper(),10,AMBER,true,136)
+	_stroke_text(base+Vector2(98,18),"SPEC SUIT" if bool(_prop(_prop(game, "midnight"), "running", false)) else "RANK · " + tier.to_upper(),10,AMBER,true,136)
 	var kmh := _speed * 3.6
 	_stroke_text(base+Vector2(12,64),"%03d" % roundi(kmh),49,MILK,true,159)
 	if kmh >= 1235.0:
@@ -1308,7 +1413,7 @@ func _action_row(label: String, description: String, title: String, code: String
 
 
 func _menu_action(key: String) -> void:
-	if key in ["restart","race","rift_trial","patrol","next","skip"] or key.begins_with("replay_"):
+	if key in ["restart","race","rift_trial","patrol","next","skip","midnight"] or key.begins_with("replay_"):
 		_close_menu()
 	_issue(key)
 	_menu_needs_redraw = true
@@ -1437,8 +1542,14 @@ func _mission_menu() -> void:
 	_info_row(_mission if not _mission.is_empty() else "Current operation",_objective)
 	if scene_ending or bool(_prop(_prop(game, "progress"), "finished", false)):
 		_info_row("Story completed","View the campaign ending and optional city activities.","POSTGAME",func(): _switch_tab("ending"),true)
-	_section("CAMPAIGN JOURNAL")
 	var campaign: Variant = _prop(game,"campaign")
+	var current_activity := str(_prop(campaign,"activity","campaign"))
+	var is_circuit := current_activity == "midnight"
+	var completed := bool(_prop(_prop(game, "progress"), "finished", false))
+	if is_circuit:
+		_action_row("Return to free patrol" if completed else "Return to the story", "Leave the circuit without losing your personal best.", "CONTINUE", "next")
+	_action_row("Midnight Circuit", "12 neon gates, boost strips, and medals. Fixed suit stats. Gold: %d seconds." % Circuit.GOLD, "RETRY" if is_circuit else "PLAY", "midnight", true)
+	_section("CAMPAIGN JOURNAL")
 	if str(_prop(campaign,"activity","campaign")) in ["patrol","race","rift_trial","replay"]:
 		_action_row("Return to the story","Resume the active campaign checkpoint.","CONTINUE","next",true)
 	var ledger: Array = campaign.ledger() if campaign is Object and campaign.has_method("ledger") else []
