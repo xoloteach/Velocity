@@ -21,7 +21,7 @@
 | CP17 | Boss fights | NOT STARTED | Final gate evidence not collected |
 | CP18 | Campaign | NOT STARTED | Final gate evidence not collected |
 | CP19 | Progression | NOT STARTED | Final gate evidence not collected |
-| CP20 | HUD and audio | IN PROGRESS | Four simultaneous pointers and limiter exercised in WebGL. Baseline browser test failed to restore joystick after immediate reload. Full touch/persistence/audio pass and physical device testing not established |
+| CP20 | HUD and audio | IN PROGRESS | Chromium SwiftShader: existing 1280×800 touch suite passed through four pointers, limiter, edited layout, reload, and 1280×720 resize after local changes (`work-hud.log`). A separate 800×500 probe saw the IndexedDB write but did not verify restored rendering at its expected coordinates. Full device/audio matrix remains unverified |
 | CP21 | Performance | NOT STARTED | Final gate evidence not collected |
 | CP22 | Visual QA rounds | NOT STARTED | Final gate evidence not collected |
 | CP23 | Clean-room final QA | IN PROGRESS | All 11 native suites passed locally; internal Web build exported and booted; not a clean-room final sign-off |
