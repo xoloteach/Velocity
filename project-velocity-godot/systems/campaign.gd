@@ -118,16 +118,16 @@ func _make_marker() -> void:
 	beam_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	beam_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
 	beam_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	beam_mat.albedo_color = Color(1.0, 0.72, 0.36, 0.16)
+	beam_mat.albedo_color = Color(1.0, 0.72, 0.36, 0.085)
 	var beam := CylinderMesh.new()
-	beam.top_radius = 0.22
-	beam.bottom_radius = 1.15
-	beam.height = 14.0
+	beam.top_radius = 0.14
+	beam.bottom_radius = 0.58
+	beam.height = 7.6
 	beam.radial_segments = 16
 	var beam_node := MeshInstance3D.new()
 	beam_node.mesh = beam
 	beam_node.material_override = beam_mat
-	beam_node.position.y = 7.0
+	beam_node.position.y = 3.8
 	beam_node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_marker.add_child(beam_node)
 	var wedge := MeshInstance3D.new()

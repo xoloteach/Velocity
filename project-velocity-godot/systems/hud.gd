@@ -841,9 +841,10 @@ func _draw_screen_fx() -> void:
 			var scan_y := fmod(_fx_time * 320.0, maxf(size.y, 64.0))
 			draw_line(Vector2(0, scan_y), Vector2(size.x, scan_y), Color(0.66, 0.88, 1.0, 0.22), 2.0)
 			draw_line(Vector2(0, size.y - scan_y), Vector2(size.x, size.y - scan_y), Color(0.70, 0.55, 1.0, 0.18), 1.5)
-		var badge := Rect2(size.x * 0.5 - 116.0, size.y * 0.16, 232.0, 32.0)
+		var rwd_y := 180.0 if (not _boss.is_empty() and bool(_boss.get("visible", true))) else 118.0
+		var badge := Rect2(size.x * 0.5 - 116.0, rwd_y, 232.0, 32.0)
 		_tile(badge, Color("#b2a3fc"), Color("#121024e6"))
-		_center_text(badge.get_center() + Vector2(0, 5), "« REWINDING  -%.1fS »" % _rewind_remaining, 13, Color("#d4c8ff"), true)
+		_center_text(badge.get_center() + Vector2(0, 5), "<< REWINDING  -%.1fS >>" % _rewind_remaining, 13, Color("#d4c8ff"), true)
 
 
 func _draw() -> void:
@@ -905,9 +906,9 @@ func _draw() -> void:
 		_stroke_text(Vector2(edge, size.y-edge-22), "WASD  MOVE    ·    DRAG  CAMERA    ·    SHIFT  SPRINT    ·    F  BOOST", 12, TEXT, true)
 		_stroke_text(Vector2(edge, size.y-edge-3), "SPACE  JUMP    ·    J  STRIKE    ·    E  INTERACT    ·    Q  POWERS", 12, TEXT, true)
 	if not _audio_unlocked and OS.has_feature("web") and _last_device != "touch":
-		var hint_rect := Rect2(size.x * 0.5 - 142.0, size.y - edge - 28.0, 284.0, 24.0)
+		var hint_rect := Rect2(edge, edge + 134.0, 233.0, 22.0)
 		_tile(hint_rect, CYAN, Color("#0e1722cc"))
-		_center_text(hint_rect.get_center() + Vector2(0, 4), "CLICK OR TAP TO ENABLE AUDIO", 10, CYAN, true)
+		_center_text(hint_rect.get_center() + Vector2(0, 4), "CLICK OR TAP FOR AUDIO", 10, CYAN, true)
 	if wheel_open:
 		_draw_ability_wheel()
 	_draw_dialogue()
@@ -1525,7 +1526,7 @@ func _cache_menu() -> void:
 		"OPEN  ·  %d SFC" % cost,func(): _menu_action("pull"),true)
 	(offer.get_child(1) as Button).disabled = _credit < cost
 	var bundles := floori(float(materials) / 3.0)
-	var redeem := _info_row("Salvage exchange   /   %d materials" % materials,"Convert duplicate trail materials into Speed Force Charge (3 materials → 1 SFC).",
+	var redeem := _info_row("Salvage exchange   /   %d materials" % materials,"Convert duplicate trail materials into Speed Force Charge (3 materials = 1 SFC).",
 		"EXCHANGE  +%d SFC" % maxi(bundles, 1),func(): _menu_action("redeem_materials"),bundles > 0)
 	(redeem.get_child(1) as Button).disabled = materials < 3
 	if not _last_pull.is_empty():

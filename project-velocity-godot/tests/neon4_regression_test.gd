@@ -1,20 +1,19 @@
 extends SceneTree
 
-const Main = preload("res://main.tscn")
+const Level = preload("res://scenes/game.tscn")
 const PopArt = preload("res://systems/population_art.gd")
 
 const EXPECTED_CLIPS := [
-	"idle", "walk", "jog", "run", "sprint", "boost_sprint", "extreme_sprint",
-	"wall_run_left", "wall_run_right", "water_run", "jump", "fall", "land",
-	"dodge", "slide", "attack_1", "attack_2", "attack_3", "heavy_attack",
-	"counter", "hit_react", "knockdown", "get_up", "cast_lightning", "phase",
-	"rewind", "tornado", "shockwave", "victory",
+	"Idle", "Walk", "Jog", "Sprint", "Boost", "Wall", "Water", "Air", "Brake",
+	"Jab", "Heavy", "Counter", "Dodge", "Slide", "Hit", "Launch", "Land",
+	"Fall", "Rise", "Takedown", "Cast", "Phase", "Portal", "Slow", "Mirage",
+	"Tornado", "Shockwave", "Redirect", "Turn",
 ]
 
 const EXPECTED_AUDIO := [
-	"ambience", "boss_score", "boost", "counter", "footstep", "hit", "impact",
-	"lightning", "mission", "phase", "portal", "rewind", "rift_ambience",
-	"score", "shockwave", "slow", "sonic", "tornado", "ui",
+	"atmosphere", "boost", "boss_score", "counter", "damage", "goal", "hit",
+	"jump", "land", "lightning", "phase", "portal", "rewind", "rift_ambience",
+	"score", "shockwave", "slide", "step", "wind",
 ]
 
 const EXPECTED_SHADERS := [
@@ -90,28 +89,27 @@ func _run() -> void:
 
 	# 4. Verify PopulationArt vehicle wheels, silhouettes, and sculpted human rigs.
 	var pop_art := PopArt.new()
-	pop_art.setup()
 	for variant in range(4):
-		var car := pop_art.vehicle("car", variant, 4.4)
-		var root_node: Node3D = car["root"]
+		var host := Node3D.new()
+		var car := pop_art.vehicle(host, "car", variant)
 		var wheels: Array = car.get("wheels", [])
 		_check(wheels.size() == 4, "Civilian car variant %d has 4 wheel pivots" % variant)
-		_check(root_node.get_node_or_null("ContactShadow") != null, "Civilian car variant %d has contact shadow" % variant)
-		root_node.free()
+		_check(host.get_node_or_null("ContactShadow") != null, "Civilian car variant %d has contact shadow" % variant)
+		host.free()
 	for kind in ["van", "police"]:
-		var heavy := pop_art.vehicle(kind, 1, 5.1)
-		var hroot: Node3D = heavy["root"]
+		var hhost := Node3D.new()
+		var heavy := pop_art.vehicle(hhost, kind, 1)
 		_check((heavy.get("wheels", []) as Array).size() == 4, "%s has 4 wheel pivots" % kind)
-		_check(hroot.get_node_or_null("ContactShadow") != null, "%s has contact shadow" % kind)
-		hroot.free()
-	var human := pop_art.human(2, false)
-	var h_node: Node3D = human["root"]
+		_check(hhost.get_node_or_null("ContactShadow") != null, "%s has contact shadow" % kind)
+		hhost.free()
+	var h_node := Node3D.new()
+	var human := pop_art.human(h_node, 2, false)
 	_check((human.get("legs", []) as Array).size() == 2 and (human.get("arms", []) as Array).size() == 2, "Human rig exposes 2 legs and 2 arms")
 	_check(h_node.get_node_or_null("ContactShadow") != null, "Human rig has contact shadow")
 	h_node.free()
 
 	# 5. Boot full game scene and test Neon 4 runtime integrations.
-	var game: Node = Main.instantiate()
+	var game: Node = Level.instantiate()
 	root.add_child(game)
 	await process_frame
 	await process_frame
@@ -120,25 +118,25 @@ func _run() -> void:
 
 	# Combat bespoke bosses & archetypes + contact shadows + counter halos.
 	var specs := [
-		{"id": "n4_dark", "name": "Nullstride", "role": "rival_dark", "boss": true, "hp": 120.0, "position": Vector3(8.0, 0.0, -8.0)},
-		{"id": "n4_yellow", "name": "Afterlight", "role": "rival_yellow", "boss": true, "hp": 120.0, "position": Vector3(-8.0, 0.0, -8.0)},
-		{"id": "n4_guard", "name": "Guard", "role": "guard", "hp": 60.0, "position": Vector3(0.0, 0.0, -14.0)},
-		{"id": "n4_speed", "name": "Speedster", "role": "speedster", "hp": 70.0, "position": Vector3(4.0, 0.0, -14.0)},
+		["n4_dark", Vector3(8.0, 0.0, -8.0), "rival_dark"],
+		["n4_yellow", Vector3(-8.0, 0.0, -8.0), "rival_yellow"],
+		["n4_guard", Vector3(0.0, 0.0, -14.0), "guard"],
+		["n4_speed", Vector3(4.0, 0.0, -14.0), "speedster"],
 	]
-	game.combat.spawn(specs)
-	_check(game.combat.enemies.size() == 4, "Combat spawns all 4 Neon 4 enemy archetypes")
-	for enemy in game.combat.enemies:
-		var node: Node3D = enemy.node
-		_check(node.get_node_or_null("ContactShadow") != null, "Enemy %s has ContactShadow" % enemy.id)
-		_check(node.get_node_or_null("CounterHalo") != null, "Enemy %s has CounterHalo" % enemy.id)
-	game.combat.clear()
+	for spec in specs:
+		var foe = game.combat.spawn(spec[0], spec[1], spec[2])
+		_check(foe != null, "Combat spawns archetype %s" % spec[2])
+		if foe != null:
+			_check(is_instance_valid(foe.shadow), "Archetype %s has ContactShadow" % spec[2])
+			_check(is_instance_valid(foe.counter_halo), "Archetype %s has CounterHalo" % spec[2])
+	game.combat.clear_encounter()
 
 	# Phase shader material override & clean restore.
 	game.powers.cooldowns.clear()
 	game.energy = 100.0
 	var hero_mesh := _first_mesh(game.suit)
 	_check(hero_mesh != null, "Hero suit contains mesh for phase shader test")
-	game.powers.cast("phase")
+	game.powers.command("phase")
 	_check(game.powers.phased(), "Phase power activates cleanly")
 	if hero_mesh != null:
 		_check(hero_mesh.material_override != null, "Phase applies shimmering phase shader override")

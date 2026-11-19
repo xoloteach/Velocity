@@ -1,15 +1,18 @@
-# Asset credits
+# Asset Credits & Original Provenance
 
-Project Velocity uses original characters, names, outfits and locations. The playable runner, Nullstride, and Afterlight are original designs developed for this project. The earlier superhero references served as gameplay inspiration.
+Project Velocity uses 100% original characters, names, outfits, environments, shaders, and audio assets. The playable hero (`Runner`), rival bosses (`Nullstride` and `Afterlight`), enemy archetypes, and the city of `Calder` are original designs created exclusively for this project. Zero unlicensed commercial IP, ripped meshes, third-party textures, or externally licensed motion-capture data are shipped.
 
-| ID | Files and use | Source and author | License notes |
-| --- | --- | --- | --- |
-| PV-01 | `assets/velocity-runner.glb`. Player, rivals, mirages. | Project Velocity. Blender rig, mesh and animation generator in `tools/create_runner.py`. | Original project asset. No third-party likenesses, ripped meshes or externally licensed motion data. |
-| PV-02 | `assets/world_*.gdshader`, `systems/world.gd`. Calder, architecture, canal, lighting, Rift. | Project Velocity. Programmable shaders and generated geometry. | Original project assets. |
-| PV-03 | `systems/population_art.gd`. Traffic models, pedestrians, signage, lights and pursuit siren. | Project Velocity. Procedural geometry and synthesized audio. | Original project assets. |
-| PV-04 | `assets/audio/*.wav`. Score, environment, movement, combat and ability audio. | Project Velocity. Reproducible synthesis in `tools/create_audio.py`. | Original project assets. |
-| PV-05 | `systems/power_fx.gd`, `assets/power_scorch.gdshader`, `systems/presentation.gd`. Visual effects and feedback. | Project Velocity. Native meshes and shader effects. | Original project assets. |
-| PV-06 | `icons/velocity.png`, `systems/hud.gd`. Branding and interface. | Project Velocity. Original icon and Godot-drawn controls. | Original project assets. Godot's built-in fonts are covered by the included Godot notices. |
-| PV-07 | Godot Web template, Godot fonts, WebAudio bridge scripts and engine runtime. | [Godot Engine contributors](https://github.com/godotengine/godot/tree/4.6.3-stable). | MIT for engine, see `licenses/GODOT-LICENSE.txt` and bundled dependency and font notices in `licenses/GODOT-COPYRIGHT.txt`. |
+| ID | Files & Use | Author & Generation Pipeline | License Notes |
+| :--- | :--- | :--- | :--- |
+| PV-01 | `assets/velocity-runner.glb` (4,976 verts / 9,400 tris, 19-bone rig, 29 animations). Playable runner & mirages. | Project Velocity Neon 4. Reproducible procedural Python GLB builder in `tools/build_characters.py`. | Original project asset. Smooth-skinned custom geometry & keyframe animations. |
+| PV-02 | `assets/nullstride-boss.glb` (5,192 verts / 9,580 tris, 19-bone rig + twin cloak ribbons, 29 animations). Nullstride boss & echoes. | Project Velocity Neon 4. Reproducible procedural Python GLB builder in `tools/build_characters.py`. | Original project asset. Bespoke silhouette, pauldrons, horned visor, and animated cape. |
+| PV-03 | `assets/afterlight-boss.glb` (4,929 verts / 9,086 tris, 19-bone rig + split coattails, 29 animations). Afterlight boss & echoes. | Project Velocity Neon 4. Reproducible procedural Python GLB builder in `tools/build_characters.py`. | Original project asset. Bespoke temporal ace crest, forearm phase-blades, and coattails. |
+| PV-04 | `assets/world_facade.gdshader`, `world_asphalt.gdshader`, `world_sky.gdshader`, `world_water.gdshader`, `contact_shadow.gdshader`, `hero_phase.gdshader`, `power_scorch.gdshader`, `world_phase.gdshader`, `world_rift_floor.gdshader`, `world_storefront.gdshader`, `facade.gdshader`. | Project Velocity. Original Godot 4 GLSL spatial shaders. | Original project assets. |
+| PV-05 | `systems/world.gd`. Calder setback architecture, rooftop water towers/spires/beacons, branching trees, planters, fire hydrants, street furniture, canal, Rift. | Project Velocity. Procedural geometry & deterministic streaming chunks. | Original project assets. |
+| PV-06 | `systems/population_art.gd`, `systems/population.gd`. 4 civilian vehicle silhouettes (sedan, coupe, SUV, taxi), delivery vans, Calder PD interceptors with rotating 5-spoke wheels, sculpted articulated pedestrians, headlights, sirens. | Project Velocity. Procedural geometry & synthesized audio. | Original project assets. |
+| PV-07 | `assets/audio/*.wav` (19 cues at 32 kHz PCM: `atmosphere`, `boost`, `boss_score`, `counter`, `damage`, `goal`, `hit`, `jump`, `land`, `lightning`, `phase`, `portal`, `rewind`, `rift_ambience`, `score`, `shockwave`, `slide`, `step`, `wind`). | Project Velocity Neon 4. Reproducible DSP synthesis in `tools/create_audio.py`. | Original project assets. |
+| PV-08 | `systems/power_fx.gd`, `systems/presentation.gd`. Multi-strand Speed Force lightning trails, reverse temporal rewind trails, dual-layer lightning bolts, Rift vortex portals, shockwave rings. | Project Velocity. Native Godot `ImmediateMesh` and material effects. | Original project assets. |
+| PV-09 | `icons/velocity.png`, `systems/hud.gd`. Branding, HUD cards, Mach speed-lines, Rewind overlay, 9-ability wheel, touch layout editor. | Project Velocity. Original icon and Godot CanvasItem UI. | Original project assets. Built-in fallback fonts covered by Godot notices. |
+| PV-10 | Godot 4.6.3 Web export template, WASM runtime, WebAudio worklets, and bundled notices. | [Godot Engine contributors](https://github.com/godotengine/godot/tree/4.6.3-stable). | MIT License (`licenses/GODOT-LICENSE.txt` and `licenses/GODOT-COPYRIGHT.txt`). |
 
-Third-party asset search did not lead to any additional downloadable assets shipped in this project. Retain the engine and dependency notices with redistributed engine builds.
+Retain `licenses/GODOT-LICENSE.txt` and `licenses/GODOT-COPYRIGHT.txt` with all redistributed builds.

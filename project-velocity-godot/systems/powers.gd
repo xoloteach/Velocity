@@ -68,10 +68,13 @@ func setup(owner_game) -> void:
 
 
 func _sync_phase_visual() -> void:
-	if _phase_visual_applied == _phase_active or game == null or not is_instance_valid(game.suit):
+	if _phase_visual_applied == _phase_active or game == null:
+		return
+	var suit_node: Variant = game.get("suit")
+	if not (suit_node is Node) or not is_instance_valid(suit_node):
 		return
 	_phase_visual_applied = _phase_active
-	for node in game.suit.find_children("*", "MeshInstance3D", true, false):
+	for node in (suit_node as Node).find_children("*", "MeshInstance3D", true, false):
 		var mi := node as MeshInstance3D
 		if is_instance_valid(mi):
 			mi.material_override = _phase_shader_mat if _phase_active else null

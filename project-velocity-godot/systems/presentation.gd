@@ -303,13 +303,13 @@ func _update_trails() -> void:
 	var up: Vector3 = game.camera.global_basis.y
 	var intensity := 1.0 if rewinding else clampf(game.speed / 36.0, 0.35, 1.55)
 
-	# Primary luminous ribbon core
+	# Primary luminous ribbon core (sleek, vivid Speed Force wake)
 	trail.surface_begin(Mesh.PRIMITIVE_TRIANGLE_STRIP)
 	for index in range(trail_points.size()):
 		var t := float(index) / float(trail_points.size() - 1)
 		var center := trail_points[index]
-		var width := (.032 + .16 * t) * intensity
-		var color := Color(base_tint.lerp(core_tint, t * 0.55), .88 * t * t)
+		var width := (0.018 + 0.085 * t) * minf(intensity, 1.30)
+		var color := Color(base_tint.lerp(core_tint, t * 0.42), 0.56 * t * t)
 		trail.surface_set_color(color)
 		trail.surface_add_vertex(center - view * width)
 		trail.surface_set_color(color)
@@ -318,22 +318,22 @@ func _update_trails() -> void:
 
 	# Multi-strand jagged Speed Force lightning filaments crackling around the runner
 	var strands := 1 if game.quality == 0 else (2 if game.quality == 1 else 3)
-	var jitter_step := floorf(fx_clock * 28.0)
+	var jitter_step := floorf(fx_clock * 30.0)
 	arc_mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
 	for s in range(strands):
-		var phase_seed := float(s) * 2.17 + jitter_step * 1.37
-		var strand_amp := (0.20 + 0.12 * float(s)) * minf(intensity, 1.35)
+		var phase_seed := float(s) * 2.17 + jitter_step * 1.43
+		var strand_amp := (0.28 + 0.16 * float(s)) * minf(intensity, 1.35)
 		var prev_pt := Vector3.ZERO
 		for index in range(trail_points.size()):
 			var t := float(index) / float(trail_points.size() - 1)
 			var base_pt := trail_points[index]
-			var angle := phase_seed + float(index) * 1.95
-			var jitter := sin(angle * 2.3 + float(s) * 4.1) * strand_amp * (0.25 + 0.75 * t)
-			var vertical := cos(angle * 1.7 + float(s) * 3.3) * (0.34 if s == 1 else 0.24) * (0.3 + 0.7 * t)
+			var angle := phase_seed + float(index) * 2.35
+			var jitter := sin(angle * 2.6 + float(s) * 4.1) * strand_amp * (0.20 + 0.80 * t)
+			var vertical := cos(angle * 1.9 + float(s) * 3.3) * (0.36 if s == 1 else 0.24) * (0.25 + 0.75 * t)
 			var pt := base_pt + view * jitter + up * vertical
 			if index > 0:
-				var w := (0.018 + 0.032 * t) * (1.2 if s == 0 else 0.85)
-				var col := Color(core_tint if s == 0 else base_tint, (0.94 if s == 0 else 0.78) * t)
+				var w := (0.014 + 0.026 * t) * (1.15 if s == 0 else 0.80)
+				var col := Color(core_tint if s == 0 else base_tint, (0.95 if s == 0 else 0.82) * t)
 				_add_quad(arc_mesh, prev_pt, pt, view * w, col)
 			prev_pt = pt
 	arc_mesh.surface_end()

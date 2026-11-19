@@ -1131,7 +1131,9 @@ func _update_visuals(foe: Fighter) -> void:
 	var countdown: float = foe.data.clock
 	var hue: Color = COLORS[foe.data.archetype]
 	var can_counter := state == "telegraph" and countdown <= _counter_window(foe)
-	var pulse_val := 0.85 + 0.15 * sin(float(game.sim_time) * 22.0)
+	var sim_v: Variant = game.get("sim_time") if game != null else null
+	var t_now: float = float(sim_v) if sim_v != null else float(Time.get_ticks_msec()) * 0.001
+	var pulse_val := 0.85 + 0.15 * sin(t_now * 22.0)
 	if can_counter:
 		hue = Color("#fff3cf")
 	foe.track.visible = showing and move not in ["strike", "singularity"]
@@ -1141,7 +1143,7 @@ func _update_visuals(foe: Fighter) -> void:
 		foe.counter_halo.visible = can_counter
 		if can_counter:
 			foe.counter_halo.global_position = foe.global_position + Vector3.UP * 2.15
-			var s := 0.85 + 0.35 * sin(float(game.sim_time) * 26.0)
+			var s := 0.85 + 0.35 * sin(t_now * 26.0)
 			foe.counter_halo.scale = Vector3(s, 1.0, s)
 			(foe.counter_halo.material_override as StandardMaterial3D).albedo_color = Color(1.0, 0.94, 0.72, 0.82)
 	if showing:

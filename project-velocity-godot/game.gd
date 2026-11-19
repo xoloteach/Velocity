@@ -275,7 +275,6 @@ func configure_settings(key: String, value: Variant, save := true) -> void:
 			quality = clampi(int(value),0,3)
 			var vp := get_viewport()
 			vp.scaling_3d_scale = [0.65, 0.85, 0.95, 1.0][quality]
-			vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_FXAA if quality >= 2 else Viewport.SCREEN_SPACE_AA_DISABLED
 			camera.far = [165.0, 240.0, 340.0, 440.0][quality] if is_instance_valid(camera) else 340.0
 			if is_instance_valid(world) and world.get("game") != null:
 				world.quality_changed(quality)

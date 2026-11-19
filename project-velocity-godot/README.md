@@ -1,53 +1,58 @@
-# Project Velocity
+# Project Velocity (Godot 4.6.3 — Neon 4 Release)
 
-A third-person Godot speedster game set in Calder. The campaign follows eight operations across the city and Rift. Postgame includes street patrol, two time trials, chapter replay, and offline progression.
+A third-person open-world 3D speedster action RPG set in the city of **Calder**, built in **Godot 4.6.3 stable** (Compatibility / WebGL 2 single-thread). Features an 8-operation campaign, two bespoke speedster boss encounters (**Nullstride** and **Afterlight**), 9 Speed Force powers, deterministic 8-second temporal rewind, streaming multi-district architecture, live traffic & pedestrian crowds, offline progression & Rift cache salvage exchange, and full desktop, gamepad, and landscape touchscreen support.
 
-## Play the Web export
+## Play the Web Export
 
-Extract the Web archive into a directory. Keep all the `index.*` files together and serve the directory over HTTP.
+Extract `project-velocity-final-web.zip` into a directory (keeping `index.html`, `index.js`, `index.wasm`, `index.pck`, and audio worklets together) and serve over HTTP with `application/wasm` MIME type:
 
 ```sh
-python3 -m http.server 8080 --directory velocity-web
+python3 -m http.server 8080 --directory project-velocity-web
 ```
 
-Open `http://localhost:8080/` in a WebGL 2 browser. For a tablet on the same network, use the server's LAN address. Existing static hosting also works when it serves `.wasm` as `application/wasm`. The matching Godot single-thread export requires no cross-origin isolation headers. Start in landscape, tap the canvas to enable audio, and use **Ops → Settings** for performance and comfort. Match the URL, origin, and browser profile between sessions to keep the same local save.
+Open `http://localhost:8080/` in any WebGL 2 browser (no Cross-Origin-Opener-Policy / SharedArrayBuffer headers required). Click or tap the canvas to enable Web Audio, and open **Ops → Settings** for graphics presets (**Low / Medium / High / Ultra**), reduced motion/flash accessibility, and audio levels.
 
 ## Controls
 
-| Action | Touch | Keyboard or mouse | Controller |
-| --- | --- | --- | --- |
-| Move and look | Move pad and right drag | WASD or arrows and right-mouse drag | Sticks |
-| Sprint and boost | Run and boost buttons | Shift and F | LB and RT |
-| Jump, dodge, slide | Jump, dodge, slide | Space, X, C | A, B, right stick click |
-| Light and heavy | Strike and heavy | J and K | X and Y |
-| Counter and lock | Counter and lock | L and Tab | LT and D-pad right |
-| Interact | Context button | E | D-pad up |
-| Abilities | Wheel and dedicated rewind | Q or 1–9 | RB wheel; D-pad rewind and lightning |
-| Pause and settings | Pause and Ops | Esc and M | Menu and View |
+| Action | Touch (Landscape) | Keyboard & Mouse | Gamepad |
+| :--- | :--- | :--- | :--- |
+| Move & Look | Left virtual stick & right-half drag | WASD / Arrows & mouse drag | Left & Right sticks |
+| Sprint & Boost | Sprint & Boost buttons | `Shift` & `F` | `LB` & `RT` |
+| Jump, Dodge, Slide | Jump, Dodge, Slide buttons | `Space`, `X`, `C` | `A`, `B`, `R3` |
+| Light & Heavy Strike | Strike & Heavy buttons | `J` & `K` | `X` & `Y` |
+| Counter & Lock-On | Counter & Lock buttons | `L` & `Tab` | `LT` & D-pad Right |
+| Interact | Context Use button | `E` | D-pad Up |
+| Speed Force Powers | Powers wheel & Rewind button | `Q` wheel or `1`–`9` direct cast | `RB` wheel + D-pad + `A` |
+| Operations & Pause | `OPS` & Pause toolbar | `M` & `Esc` | `Start` / `Menu` |
 
-Use Ops for mission clues, the map, cache odds, upgrades, and the touch layout editor. Customize the slider if a high speed makes a turn or rescue difficult. Save settings and awards are stored on this browser. Read `docs/PROGRESSION_REWIND.md` for the difference between reversible world state and permanent rewards.
+Use **Ops → Touch layout** to drag/resize any touch control, toggle left-handed mirrored placement, or enable tap-to-sprint. Use **Ops → Rift cache** or **Inventory** to open trail caches and exchange duplicate materials (`3 materials → 1 SFC`).
 
-## Open or build the source
+## Open, Test, and Build from Source
 
-Use Godot **4.6.3 stable**, Compatibility rendering, and the official matching Web export templates. Blender **4.3.2** and Python 3 can regenerate original art and WAV files. The build uses the checked-in GLB and WAV files, so regeneration is optional.
-
-```sh
-godot --headless --editor --path . --import
-mkdir -p ../velocity-web
-godot --headless --path . --export-release Web ../velocity-web/index.html
-```
-
-The Web preset produces a single-thread, multi-file export. It runs GDScript without native extensions or internet requests for game assets. WebGL capability checks are built into Godot's export page.
+Requires **Godot 4.6.3 stable** and official matching 4.6.3 Web export templates.
 
 ```sh
-blender -b -t 4 -P tools/create_runner.py
-python3 tools/create_audio.py
+# 1. Import assets
+godot --headless --editor --path project-velocity-godot --import
+
+# 2. Run all 9 automated native test suites
+GODOT_BIN=godot bash project-velocity-godot/tools/test_native.sh
+
+# 3. Export multi-file WebGL 2 release build
+mkdir -p velocity-web
+godot --headless --path project-velocity-godot --export-release Web "$(pwd)/velocity-web/index.html"
 ```
 
-The current repository includes the main scene in `scenes/game.tscn`, subsystem code under `systems/`, project data under `shared/`, and scoped tests under `tests/`. See `CHECKPOINTS.md`, `QA_REPORT.md`, and `ASSET_CREDITS.md` for validation and provenance.
+Optional procedural asset regeneration (checked-in GLBs & WAVs are ready to use out of the box):
 
-Godot references
+```sh
+python3 project-velocity-godot/tools/build_characters.py
+python3 project-velocity-godot/tools/create_audio.py
+```
 
-- [Exporting for the Web](https://docs.godotengine.org/en/4.6/tutorials/export/exporting_for_web.html)
-- [CharacterBody3D](https://docs.godotengine.org/en/4.6/classes/class_characterbody3d.html)
-- [JavaScriptBridge filesystem synchronization](https://docs.godotengine.org/en/4.6/classes/class_javascriptbridge.html)
+## Documentation
+
+- `RELEASE_NOTES.md` — Summary of all Neon 4 visual, animation, audio, combat, HUD, and performance improvements.
+- `FINAL_QA_REPORT.md` — Verified native & Chromium WebGL 2 test evidence, 4-preset benchmarks, visual QA rounds, and honest hardware limitations.
+- `CHECKPOINTS.md` — Complete CP01–CP18 execution ledger.
+- `ASSET_CREDITS.md` — 100% original asset provenance and Godot engine license notices.

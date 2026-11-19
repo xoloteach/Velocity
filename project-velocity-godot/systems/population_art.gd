@@ -16,8 +16,8 @@ const HAIR := [
 	Color("#1c181a"), Color("#3d2a20"), Color("#6a4e36"), Color("#242026"), Color("#8a7459")
 ]
 const CARS := [
-	Color("#2b4257"), Color("#7c2f34"), Color("#2f5a5c"),
-	Color("#c9932c"), Color("#8c959c"), Color("#4f3e52")
+	Color("#3c607e"), Color("#a6363c"), Color("#347070"),
+	Color("#df9f2b"), Color("#9aa6b2"), Color("#634b6d")
 ]
 
 var _materials: Dictionary = {}
@@ -175,16 +175,16 @@ func _coach(kind: String, variant: int) -> ArrayMesh:
 	var paint_color: Color = CARS[posmod(variant, CARS.size())]
 	if kind == "car" and subtype == 3:
 		paint_color = Color("#d19529")
-	var paint := material(paint_color, 0.32, 0.52)
+	var paint := material(paint_color, 0.34, 0.22)
 	if kind == "police":
-		paint = material(Color("#1b2736"), 0.34, 0.44)
+		paint = material(Color("#1f2e40"), 0.34, 0.24)
 	elif kind == "van":
-		paint = material(Color("#c4beb5") if variant % 2 == 0 else Color("#6e767b"), 0.54, 0.22)
+		paint = material(Color("#d2ccc2") if variant % 2 == 0 else Color("#7d868c"), 0.50, 0.14)
 	elif kind == "suspect":
-		paint = material(Color("#7c2d2a"), 0.36, 0.42)
-	var trim := material(Color("#1b2026"), 0.86, 0.14)
-	var chrome := material(Color("#b6c4cf"), 0.26, 0.78)
-	var glass := material(Color("#1d3344"), 0.16, 0.72)
+		paint = material(Color("#9e3532"), 0.34, 0.22)
+	var trim := material(Color("#20262e"), 0.84, 0.12)
+	var chrome := material(Color("#c6d4df"), 0.24, 0.55)
+	var glass := material(Color("#2a465c"), 0.18, 0.30)
 	var plate := material(Color("#dde4e6"), 0.55, 0.05)
 	var headlight := material(Color("#fff0cf"), 0.30, 0.1, 1.85)
 	var taillight := material(Color("#e83d38"), 0.38, 0.1, 1.15)
@@ -267,6 +267,8 @@ func _coach(kind: String, variant: int) -> ArrayMesh:
 
 	panels.append(_part(_bodywork(body_rows), Vector3.ZERO, paint))
 	panels.append(_part(_bodywork(cab_rows), Vector3.ZERO, glass))
+	if kind != "van":
+		panels.append(_box(Vector3(0.0, 0.56, -0.04), Vector3(1.84, 0.40, 3.82), paint))
 
 	# Painted roof cap & structural A/B/C pillars so the greenhouse reads as real metal + glass
 	if kind != "van":
