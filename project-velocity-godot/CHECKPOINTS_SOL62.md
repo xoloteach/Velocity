@@ -2,13 +2,13 @@
 
 | Gate | Scope | Status | Evidence / remaining |
 | --- | --- | --- | --- |
-| CP01 | Clone and baseline | IN PROGRESS | Clean import and first rendered spawn; full baseline capture pending |
-| CP02 | Web boot | IN PROGRESS | Original archive loaded in local Chromium; clean source Web regression pending |
+| CP01 | Clone and baseline | VERIFIED | Clean archive import and native regression in `baseline-native.log`; shipped Web 16:10 capture in `archive-hud/touch-hud-16x10.png`; baseline `b158669` |
+| CP02 | Web boot | VERIFIED | Matching 4.6.3 nonthreaded export, local HTTP file loads and actual touch-controlled Chromium WebGL 2 canvas; `base-export.log`, `base-browser/browser.json`, `work-hud/` |
 | CP03 | Native regression | VERIFIED | Original `tools/test_native.sh`: 9/9 process exits; campaign teardown warning recorded |
 | CP04 | Asset provenance | IN PROGRESS | Existing original-asset credits inventoried; replacement licenses not selected |
 | CP05 | Hero geometry | NOT STARTED | Final gate evidence not collected |
-| CP06 | Mocap | NOT STARTED | Final gate evidence not collected |
-| CP07 | Camera and controls | IN PROGRESS | Camera and input code review |
+| CP06 | Mocap | IN PROGRESS | Existing hero and boss rigs: 87/87 sampled clips with valid bone paths and finite poses; no mocap replacement or foot-contact sign-off |
+| CP07 | Camera and controls | IN PROGRESS | `ed291c7` adds swept clearance on damped camera motion, scoped wheel input and surface-aware contact shadow. `sol62_controls_test`: 10/10; browser touch movement exercised; sustained scenario coverage incomplete |
 | CP08 | Boss art | NOT STARTED | Final gate evidence not collected |
 | CP09 | Civilian art | NOT STARTED | Final gate evidence not collected |
 | CP10 | Vehicle traffic | NOT STARTED | Final gate evidence not collected |
@@ -21,8 +21,10 @@
 | CP17 | Boss fights | NOT STARTED | Final gate evidence not collected |
 | CP18 | Campaign | NOT STARTED | Final gate evidence not collected |
 | CP19 | Progression | NOT STARTED | Final gate evidence not collected |
-| CP20 | HUD and audio | IN PROGRESS | Baseline synthetic browser touch run started |
+| CP20 | HUD and audio | IN PROGRESS | Four simultaneous pointers and limiter exercised in WebGL. Baseline browser test failed to restore joystick after immediate reload. Full touch/persistence/audio pass and physical device testing not established |
 | CP21 | Performance | NOT STARTED | Final gate evidence not collected |
 | CP22 | Visual QA rounds | NOT STARTED | Final gate evidence not collected |
-| CP23 | Clean-room final QA | NOT STARTED | Final gate evidence not collected |
-| CP24 | Final handoff | NOT STARTED | Final gate evidence not collected |
+| CP23 | Clean-room final QA | IN PROGRESS | All 11 native suites passed locally; internal Web build exported and booted; not a clean-room final sign-off |
+| CP24 | Final handoff | NOT STARTED | Unmet acceptance gates; no release ZIP, push or deployment |
+
+Raw command output and browser captures are held in the local `sol62-evidence` workspace directory; no evidence of a real Android performance pass.
